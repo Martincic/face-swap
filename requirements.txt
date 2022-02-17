@@ -1,0 +1,7 @@
+numpy
+opencv-python
+matplotlib
+cmake
+wheel
+face_recognition
+dlib
