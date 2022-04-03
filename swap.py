@@ -1,8 +1,5 @@
-from pydoc import Helper
 import cv2
 import numpy as np
-import dlib
-import time
 import bin.helpers
 
 #Load image
@@ -42,31 +39,7 @@ subdiv.insert(landmarks_points)
 triangles = subdiv.getTriangleList()
 triangles = np.array(triangles, dtype=np.int32)
 
-# Perform Delaunay triangulation on the face to find out in which pattern of landmarks 
-# did triangulate together. Store indexes that did triangulate so we can use same facial 
-# features to index both images (eg if shape_predictor_68_face_landmarks's facial features 0, 37 and 17
-# triangulated we want to use that triangle for both images) - thats why we care about indexes, and not 
-# about actual locations
-indexes_triangles = []
-for t in triangles:
-    # Get three points of a given triangle
-    pt1 = (t[0], t[1])
-    pt2 = (t[2], t[3])
-    pt3 = (t[4], t[5])
-
-    # Traverse all points from landmarks to find which indexes
-    # have been used for given triangle (eg. 0 - facial edge + 36 - corner of eye + 31 - end of nose)
-    for n in range(0, 68):
-        if points[n][0] == pt1[0] and points[n][1] == pt1[1]:
-            indexed1 = n
-        
-        if points[n][0] == pt2[0] and points[n][1] == pt2[1]:
-            indexed2 = n
-        
-        if points[n][0] == pt3[0] and points[n][1] == pt3[1]:
-            indexed3 = n
-
-    indexes_triangles.append([indexed1, indexed2, indexed3])
+indexes_triangles = bin.helpers.performDelunay(triangles, points)
         
 # Second face
 landmarks_points2 = bin.helpers.getLandmarksPoints(img2_gray)
@@ -139,7 +112,6 @@ for triangle_index in indexes_triangles:
 img2_face_mask = np.zeros_like(img2_gray)
 img2_head_mask = cv2.fillConvexPoly(img2_face_mask, convexhull2, 255)
 img2_face_mask = cv2.bitwise_not(img2_head_mask)
-
 
 img2_head_noface = cv2.bitwise_and(img2, img2, mask=img2_face_mask)
 result = cv2.add(img2_head_noface, img2_new_face)

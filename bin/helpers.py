@@ -1,6 +1,34 @@
 import cv2
 import dlib
 
+# Perform Delaunay triangulation on the face to find out in which pattern of landmarks 
+# did triangulate together. Store indexes that did triangulate so we can use same facial 
+# features to index both images (eg if shape_predictor_68_face_landmarks's facial features 0, 37 and 17
+# triangulated we want to use that triangle for both images) - thats why we care about indexes, and not 
+# about actual locations
+def performDelunay(triangles, points):
+    indexes_triangles = []
+    for t in triangles:
+        # Get three points of a given triangle
+        pt1 = (t[0], t[1])
+        pt2 = (t[2], t[3])
+        pt3 = (t[4], t[5])
+
+        # Traverse all points from landmarks to find which indexes
+        # have been used for given triangle (eg. 0 - facial edge + 36 - corner of eye + 31 - end of nose)
+        for n in range(0, 68):
+            if points[n][0] == pt1[0] and points[n][1] == pt1[1]:
+                indexed1 = n
+            
+            if points[n][0] == pt2[0] and points[n][1] == pt2[1]:
+                indexed2 = n
+            
+            if points[n][0] == pt3[0] and points[n][1] == pt3[1]:
+                indexed3 = n
+
+        indexes_triangles.append([indexed1, indexed2, indexed3])
+    return indexes_triangles
+
 # Function to get facial landmarks
 def getLandmarksPoints(image):
     # Initialize pre-trained face detector - find location of the face
